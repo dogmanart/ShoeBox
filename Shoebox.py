@@ -16,6 +16,9 @@ cardbrand = []
 cardbordref = []
 cardidentno = []
 
+ipp = 8
+curpage = 0
+
 def save():
       data = {
         "collections": collectionlist,
@@ -71,22 +74,60 @@ appframe.pack(side='left', expand=True)
 
 topframe = ctk.CTkFrame(appframe, width=800, height=50, corner_radius=15, fg_color="#DB802B")
 topframe.pack(side='top', pady=5)
+topframe.grid_columnconfigure(1, weight=1) 
 topframe.grid_propagate(False)
 
+def nextpage():
+    global curpage
+    current_col = collectionselect.get()
+    query = searchbox.get().lower()
+    match_count = 0
+    for i, col in enumerate(cardbelonging):
+        if col == current_col:
+            if query == "" or query in str(cardslist[i]).lower():
+                match_count += 1
+
+    last_page = (match_count - 1) // ipp 
+    
+    if curpage < last_page:
+        curpage += 1
+        refreshcards(searchbox.get())
+        cardsframe._parent_canvas.yview_moveto(0)
+
+def prevpage():
+    global curpage
+    if curpage > 0:
+        curpage -= 1
+        refreshcards(searchbox.get())
+        cardsframe._parent_canvas.yview_moveto(0)
+
 def back():
+      global curpage
+      curpage = 0
       searchbox.delete(0, 'end')
       refreshcards("")
 
 backbutton = ctk.CTkButton(topframe, text="Back", corner_radius=10, width=30, fg_color="#EB9647", hover_color="#c4721b", command=back)
-backbutton.grid(row=0, column=0, pady=10, padx=10, sticky='news')
+backbutton.grid(row=0, column=0, pady=10, padx=10, sticky='w')
+
+nextbutton = ctk.CTkButton(topframe, text="►", corner_radius=10, width=30, fg_color="#EB9647", hover_color="#c4721b", command=nextpage)
+nextbutton.grid(row=0, column=5, pady=10, padx=5, sticky='news')
+
+prevbutton = ctk.CTkButton(topframe, text="◄", corner_radius=10, width=30, fg_color="#EB9647", hover_color="#c4721b", command=prevpage)
+prevbutton.grid(row=0, column=3, pady=10, padx=10, sticky='news')
+
+pagetxt = ctk.CTkLabel(topframe, text="Page 1")
+pagetxt.grid(row=0, column=4, pady=2, padx=2, sticky='news')
 
 closebutton = ctk.CTkButton(topframe, text="Close", corner_radius=10, width=30, fg_color="#Eb9647", hover_color="#c4721b", command=closewindow)
-closebutton.grid(row=0, column=3, pady=10, padx=475, sticky='e')
+closebutton.grid(row=0, column=6, pady=10, padx=15, sticky='e')
 
 searchbox = ctk.CTkEntry(topframe, fg_color="#e6a454", border_color="#c4721b",placeholder_text="Search...", placeholder_text_color="#555555", text_color="#000000")
-searchbox.grid(row=0, column=1)
+searchbox.grid(row=0, column=1, sticky='ew', padx =5)
 
 def searchfunct():
+      global curpage
+      curpage=0
       cardsframe._parent_canvas.yview_moveto(0)
       refreshcards(searchbox.get().lower())
 
@@ -289,20 +330,33 @@ def showdetails(indexno):
       detclosebutton.pack(side='bottom', padx=10, pady=10)
 
 def refreshcards(searchquery):
+      global curpage
+      cardsframe.grid_columnconfigure((0, 1, 2), weight=0, uniform="equal")
       for widget in cardsframe.winfo_children():
             widget.destroy()
       colcount = cardbelonging.count(collectionselect.get())
-      newcardbutton = ctk.CTkButton(cardsframe, text=f"+ New Card\n({colcount} cards)", width=160, height=220, fg_color="#Eb9647", hover_color="#c4721b", corner_radius=15, border_color="#ffffff", border_width=1, font=("Arial", 14), command=addnewcard)
+      newcardbutton = ctk.CTkButton(cardsframe, text=f"+ New Card\n({colcount} cards)", width=155, height=220, fg_color="#Eb9647", hover_color="#c4721b", corner_radius=15, border_color="#ffffff", border_width=1, font=("Arial", 14), command=addnewcard)
       newcardbutton.grid(row=0, column=0, pady=5, padx=5, sticky="nw")
+
+      start = curpage * ipp
+      end = start + ipp
+
+      match_count = 0
+
       displaycount = 1
       for index, cardtext in enumerate(cardslist):
             if cardbelonging[index] == collectionselect.get():
-                  if searchquery == "" or searchquery in str(cardtext).lower() or searchquery in str(cardextras[index]).lower():
-                        r, c = divmod(displaycount,3)
-                        card = ctk.CTkButton(cardsframe, text=cardtext, width=155, height=220, fg_color="#db802b", hover_color="#c4721b", corner_radius=15, border_color="#ffffff", border_width=1, font=("Arial", 14), command=lambda i=index: showdetails(i))
-                        card.grid(row=r, column=c, padx=5, pady=5, sticky='nw')
-                        card._text_label.configure(wraplength=270)
-                        displaycount +=1
+                  if searchquery == "" or searchquery in str(cardtext).lower() or searchquery in str(cardextras[index]).lower() or (searchquery.replace("#","") in str(cardidentno[index]).lower()) and str(searchquery).startswith("#"):
+                        total_pages = (match_count - 1) // ipp
+                        if start <= match_count < end:
+                              r, c = divmod(displaycount,3)
+                              card = ctk.CTkButton(cardsframe, text=cardtext, width=155, height=220, fg_color="#db802b", hover_color="#c4721b", corner_radius=15, border_color="#ffffff", border_width=1, font=("Arial", 14), command=lambda i=index: showdetails(i))
+                              card.grid(row=r, column=c, padx=5, pady=5, sticky='nw')
+                              card._text_label.configure(wraplength=154)
+                              displaycount +=1
+                        match_count+=1
+      total_pages = (match_count + ipp - 1) // ipp if match_count > 0 else 1
+      pagetxt.configure(text=f"Page {curpage + 1}/{total_pages}")
 
 load()
 
