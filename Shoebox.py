@@ -60,7 +60,6 @@ window.geometry("805x505")
 ctk.set_appearance_mode("dark")
 
 collectionlist = []
-collectionlist.append("My Collection")
 cardbelonging = []
 
 def closewindow():
@@ -88,7 +87,8 @@ searchbox = ctk.CTkEntry(topframe, fg_color="#e6a454", border_color="#c4721b",pl
 searchbox.grid(row=0, column=1)
 
 def searchfunct():
-      refreshcards(searchbox.get())
+      cardsframe._parent_canvas.yview_moveto(0)
+      refreshcards(searchbox.get().lower())
 
 searchbutton = ctk.CTkButton(topframe, corner_radius=15, text="🔍 ", fg_color="#Eb9647", hover_color="#c4721b", width=1, command=searchfunct)
 searchbutton.grid(row=0, column=2, padx=5)
@@ -242,8 +242,9 @@ def addnewcard():
 cardsframe= ctk.CTkScrollableFrame(appframe, width=640, height=420, corner_radius=12)
 cardsframe.pack(pady=10, padx=10, )
 
-def delete_card(index):
-    if messagebox.askyesno("Delete", f"Are you sure you want to delete '{cardslist[index]}'?"):
+def delete_card(index, windowdes):
+      windowdes.destroy()
+      if messagebox.askyesno("Delete", f"Are you sure you want to delete '{cardslist[index]}'?"):
         cardslist.pop(index)
         cardnames.pop(index)
         cardyears.pop(index)
@@ -254,20 +255,51 @@ def delete_card(index):
         cardidentno.pop(index)
         cardbelonging.pop(index)
         
-        save() 
+        save()
         refreshcards("")
+
+def showdetails(indexno):
+      detailswindow = ctk.CTkToplevel(window)
+      detailswindow.title("ShoeBox2 - Card Info")
+      detailswindow.iconbitmap("Shoeboxlogo2 (1).ico")
+      detailswindow.geometry("500x600")
+      detailswindow.attributes("-topmost", True)
+
+      detwindframe = ctk.CTkFrame(detailswindow)
+      detwindframe.pack(expand=True, pady=10, padx=10)
+
+      detailsframe = ctk.CTkFrame(detwindframe, width=400, height=400)
+      detailsframe.pack(expand=True, pady=10, padx=10)
+      detailsframe.pack_propagate(False)
+
+      detailsname = (f"Name: {str(cardnames[indexno]).lstrip()}\n"
+               f"{str(cardidentno[indexno]).lstrip()}\n"
+               f"Grade: {str(cardgrades[indexno]).lstrip()}\n")
+      details = f"{detailsname}\n\n{cardextras[indexno]}"
+      detailstext = ctk.CTkLabel(detailsframe, text=details, font=("Arial",12), justify='left')
+      detailstext.pack(anchor='nw', padx=10, pady =10)
+
+      deletebutton = ctk.CTkButton(detwindframe, text="Delete Card", command=lambda: delete_card(indexno, detailswindow), fg_color="#Eb9647", hover_color="#c4721b")
+      deletebutton.pack(side='bottom', padx=10, pady=10)
+
+      def detailsgone():
+            detailswindow.destroy()
+
+      detclosebutton = ctk.CTkButton(detwindframe, text="Close", fg_color="#Eb9647", hover_color="#c4721b", command=detailsgone)
+      detclosebutton.pack(side='bottom', padx=10, pady=10)
 
 def refreshcards(searchquery):
       for widget in cardsframe.winfo_children():
             widget.destroy()
-      newcardbutton = ctk.CTkButton(cardsframe, text="+ New Card", width=155, height=220, fg_color="#Eb9647", hover_color="#c4721b", corner_radius=15, border_color="#ffffff", border_width=1, font=("Arial", 14), command=addnewcard)
+      colcount = cardbelonging.count(collectionselect.get())
+      newcardbutton = ctk.CTkButton(cardsframe, text=f"+ New Card\n({colcount} cards)", width=160, height=220, fg_color="#Eb9647", hover_color="#c4721b", corner_radius=15, border_color="#ffffff", border_width=1, font=("Arial", 14), command=addnewcard)
       newcardbutton.grid(row=0, column=0, pady=5, padx=5, sticky="nw")
       displaycount = 1
       for index, cardtext in enumerate(cardslist):
             if cardbelonging[index] == collectionselect.get():
-                  if searchquery == "" or searchquery in str(cardtext).lower():
+                  if searchquery == "" or searchquery in str(cardtext).lower() or searchquery in str(cardextras[index]).lower():
                         r, c = divmod(displaycount,3)
-                        card = ctk.CTkButton(cardsframe, text=cardtext, width=155, height=220, fg_color="#db802b", hover_color="#c4721b", corner_radius=15, border_color="#ffffff", border_width=1, font=("Arial", 14), command=lambda i=index: delete_card(i) )
+                        card = ctk.CTkButton(cardsframe, text=cardtext, width=155, height=220, fg_color="#db802b", hover_color="#c4721b", corner_radius=15, border_color="#ffffff", border_width=1, font=("Arial", 14), command=lambda i=index: showdetails(i))
                         card.grid(row=r, column=c, padx=5, pady=5, sticky='nw')
                         card._text_label.configure(wraplength=270)
                         displaycount +=1
