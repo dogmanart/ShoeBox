@@ -84,7 +84,7 @@ def nextpage():
     match_count = 0
     for i, col in enumerate(cardbelonging):
         if col == current_col:
-            if query == "" or query in str(cardslist[i]).lower():
+            if query == "" or query in str(cardslist[i]).lower() or query in str(cardextras[i]).lower() or (query.replace("#","") in str(cardidentno[i]).lower()) and str(query).startswith("#") or (query.replace("!","") not in str(cardslist[i]).lower()) and str(query).startswith("!"):
                 match_count += 1
 
     last_page = (match_count - 1) // ipp 
@@ -346,7 +346,7 @@ def refreshcards(searchquery):
       displaycount = 1
       for index, cardtext in enumerate(cardslist):
             if cardbelonging[index] == collectionselect.get():
-                  if searchquery == "" or searchquery in str(cardtext).lower() or searchquery in str(cardextras[index]).lower() or (searchquery.replace("#","") in str(cardidentno[index]).lower()) and str(searchquery).startswith("#"):
+                  if searchquery == "" or searchquery in str(cardtext).lower() or searchquery in str(cardextras[index]).lower() or (searchquery.replace("#","") in str(cardidentno[index]).lower()) and str(searchquery).startswith("#") or (searchquery.replace("!","") not in str(cardslist[index]).lower()) and str(searchquery).startswith("!"):
                         total_pages = (match_count - 1) // ipp
                         if start <= match_count < end:
                               r, c = divmod(displaycount,3)
