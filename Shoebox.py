@@ -352,7 +352,7 @@ def refreshcards(searchquery):
                               r, c = divmod(displaycount,3)
                               card = ctk.CTkButton(cardsframe, text=cardtext, width=155, height=220, fg_color="#db802b", hover_color="#c4721b", corner_radius=15, border_color="#ffffff", border_width=1, font=("Arial", 14), command=lambda i=index: showdetails(i))
                               card.grid(row=r, column=c, padx=5, pady=5, sticky='nw')
-                              card._text_label.configure(wraplength=154)
+                              card._text_label.configure(wraplength=100)
                               displaycount +=1
                         match_count+=1
       total_pages = (match_count + ipp - 1) // ipp if match_count > 0 else 1
